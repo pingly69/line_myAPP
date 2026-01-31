@@ -8,7 +8,6 @@
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     .loading-overlay { display: none; background: rgba(255, 255, 255, 0.9); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; justify-content: center; align-items: center; }
-    /* สไตล์สำหรับ Custom Modal */
     #customAlert { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; padding: 1rem; }
     .modal-content { animation: scaleUp 0.3s ease-out; }
     @keyframes scaleUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -24,7 +23,7 @@
     </div>
   </div>
 
-  <!-- Custom Alert Modal (แทนที่ Alert Browser) -->
+  <!-- Custom Alert Modal -->
   <div id="customAlert">
     <div class="modal-content bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center">
       <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -32,8 +31,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h3 class="text-xl font-bold mb-2">สำเร็จ!</h3>
-      <p id="alertMessage" class="text-gray-600 mb-6">บันทึกข้อมูลเรียบร้อยแล้ว</p>
+      <h3 class="text-xl font-bold mb-2">บันทึกสำเร็จ!</h3>
+      <p id="alertMessage" class="text-gray-600 mb-6 text-sm">เราได้ส่งรายละเอียดการแจ้งซ่อมให้ท่านในแชทแล้ว</p>
       <button onclick="closeLiff()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg">
         ตกลง
       </button>
@@ -41,9 +40,8 @@
   </div>
 
   <div class="max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-6 mt-4 border-t-8 border-green-600">
-    <h1 class="text-2xl font-bold text-center mb-6 text-gray-700">แจ้งซ่อม/แจ้งปัญหา V2</h1>
+    <h1 class="text-2xl font-bold text-center mb-6 text-gray-700">แจ้งซ่อม/แจ้งปัญหา</h1>
     
-    <!-- LINE Profile -->
     <div class="flex items-center space-x-4 mb-8 bg-green-50 p-4 rounded-2xl border border-green-100 shadow-sm">
       <img id="userImg" class="h-16 w-16 rounded-full border-4 border-white shadow-md" src="https://via.placeholder.com/150">
       <div>
@@ -55,7 +53,7 @@
     <form id="reportForm" class="space-y-5">
       <div>
         <label class="block text-sm font-bold text-gray-600 mb-1">1. ประเภทปัญหา</label>
-        <select id="category" required class="w-full p-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none">
+        <select id="category" required class="w-full p-3.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500">
           <option value="">-- เลือกประเภท --</option>
           <option value="อุปกรณ์ชำรุด">อุปกรณ์ชำรุด</option>
           <option value="ซอฟต์แวร์มีปัญหา">ซอฟต์แวร์มีปัญหา</option>
@@ -65,7 +63,7 @@
 
       <div>
         <label class="block text-sm font-bold text-gray-600 mb-1">2. รายละเอียดปัญหา</label>
-        <textarea id="details" required class="w-full p-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" rows="3" placeholder="ระบุอาการเสีย..."></textarea>
+        <textarea id="details" required class="w-full p-3.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500" rows="3" placeholder="ระบุอาการเสีย..."></textarea>
       </div>
 
       <div>
@@ -77,23 +75,18 @@
         ยืนยันการแจ้งซ่อม
       </button>
     </form>
-    
-    <p id="statusMsg" class="mt-4 text-[10px] text-gray-400 text-center italic"></p>
   </div>
 
   <script>
-    // URL ของ Web App พี่ปิงใส่เหมือนเดิมครับ
+    // ใส่ URL Web App ของพี่ปิงเหมือนเดิมครับ
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxfKlMivfqJAgrXakFyaYrqF4xpnKijwCjHzPb9YnGGL3noh39zI28I9vF-8pfLKer8cg/exec";
     
     let userData = {};
 
-    // ฟังก์ชันแสดง Custom Alert
     function showAlert(msg) {
-      document.getElementById('alertMessage').innerText = msg;
       document.getElementById('customAlert').style.display = 'flex';
     }
 
-    // ฟังก์ชันปิดและจบการทำงาน
     function closeLiff() {
       liff.closeWindow();
     }
@@ -108,19 +101,20 @@
           userData = profile;
           document.getElementById('userName').innerText = profile.displayName;
           document.getElementById('userImg').src = profile.pictureUrl || "https://via.placeholder.com/150";
-          
-          const btn = document.getElementById('submitBtn');
-          btn.disabled = false;
-          btn.classList.remove('opacity-50');
+          document.getElementById('submitBtn').disabled = false;
+          document.getElementById('submitBtn').classList.remove('opacity-50');
         }
       } catch (e) {
-        document.getElementById('statusMsg').innerText = "LIFF Error: " + e.message;
+        console.error(e);
       }
     }
 
     document.getElementById('reportForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       document.getElementById('loading').style.display = 'flex';
+
+      const category = document.getElementById('category').value;
+      const details = document.getElementById('details').value;
 
       let base64Image = "";
       const file = document.getElementById('imageInput').files[0];
@@ -134,8 +128,8 @@
 
       const payload = {
         lineName: userData.displayName,
-        category: document.getElementById('category').value,
-        details: document.getElementById('details').value,
+        category: category,
+        details: details,
         imageBlob: base64Image
       };
 
@@ -144,13 +138,28 @@
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
-      .then(res => {
+      .then(async (res) => {
         document.getElementById('loading').style.display = 'none';
-        showAlert(res.message); // เรียกใช้ Custom Alert แทน alert()
+        
+        // --- ส่วนที่เพิ่มใหม่: ส่งข้อความยืนยันกลับเข้าแชท LINE ---
+        try {
+          if (liff.isInClient()) { // ตรวจสอบว่าเปิดในแอป LINE หรือเปล่า
+            await liff.sendMessages([
+              {
+                type: 'text',
+                text: `📌 ยืนยันการแจ้งปัญหาสำเร็จ!\n------------------\n👤 ผู้แจ้ง: ${userData.displayName}\n📁 ประเภท: ${category}\n📝 รายละเอียด: ${details}\n------------------\nเจ้าหน้าที่จะรีบดำเนินการให้เร็วที่สุดครับ`
+              }
+            ]);
+          }
+        } catch (err) {
+          console.error("ส่งข้อความไม่สำเร็จ", err);
+        }
+        
+        showAlert(res.message);
       })
       .catch(err => {
         document.getElementById('loading').style.display = 'none';
-        alert("เกิดข้อผิดพลาดในการบันทึก");
+        alert("บันทึกไม่สำเร็จ");
       });
     });
 
