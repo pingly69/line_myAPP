@@ -6,13 +6,38 @@
   <title>ระบบแจ้งปัญหา - Standalone V2</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    .loading-overlay { display: none; background: rgba(255, 255, 255, 0.9); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; justify-content: center; align-items: center; }
+    /* สไตล์สำหรับ Custom Modal */
+    #customAlert { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-content { animation: scaleUp 0.3s ease-out; }
+    @keyframes scaleUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 font-sans text-gray-800">
 
-  <!-- Loading Screen -->
-  <div id="loading" class="hidden fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center">
-    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-    <p class="text-green-600 font-bold">กำลังบันทึกข้อมูล...</p>
+  <!-- หน้าจอ Loading -->
+  <div id="loading" class="loading-overlay">
+    <div class="text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+      <p class="text-green-600 font-bold">กำลังบันทึกข้อมูล...</p>
+    </div>
+  </div>
+
+  <!-- Custom Alert Modal (แทนที่ Alert Browser) -->
+  <div id="customAlert">
+    <div class="modal-content bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center">
+      <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-bold mb-2">สำเร็จ!</h3>
+      <p id="alertMessage" class="text-gray-600 mb-6">บันทึกข้อมูลเรียบร้อยแล้ว</p>
+      <button onclick="closeLiff()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg">
+        ตกลง
+      </button>
+    </div>
   </div>
 
   <div class="max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-6 mt-4 border-t-8 border-green-600">
@@ -57,12 +82,21 @@
   </div>
 
   <script>
-    /**
-     * เปลี่ยน URL ด้านล่างนี้ให้เป็นลิงก์ Web App (ลงท้ายด้วย /exec) ของพี่ที่กด Deploy ล่าสุดครับ
-     */
+    // URL ของ Web App พี่ปิงใส่เหมือนเดิมครับ
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxfKlMivfqJAgrXakFyaYrqF4xpnKijwCjHzPb9YnGGL3noh39zI28I9vF-8pfLKer8cg/exec";
     
     let userData = {};
+
+    // ฟังก์ชันแสดง Custom Alert
+    function showAlert(msg) {
+      document.getElementById('alertMessage').innerText = msg;
+      document.getElementById('customAlert').style.display = 'flex';
+    }
+
+    // ฟังก์ชันปิดและจบการทำงาน
+    function closeLiff() {
+      liff.closeWindow();
+    }
 
     async function initLiff() {
       try {
@@ -86,7 +120,7 @@
 
     document.getElementById('reportForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('loading').style.display = 'flex';
 
       let base64Image = "";
       const file = document.getElementById('imageInput').files[0];
@@ -105,20 +139,19 @@
         imageBlob: base64Image
       };
 
-      /**
-       * ส่งข้อมูลด้วยวิธี fetch() จะเสถียรกว่า google.script.run เมื่อรันจากข้างนอก
-       */
       fetch(GAS_API_URL, {
         method: "POST",
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(res => {
-        alert(res.message);
-        liff.closeWindow();
+        document.getElementById('loading').style.display = 'none';
+        showAlert(res.message); // เรียกใช้ Custom Alert แทน alert()
       })
-      .catch(err => alert("บันทึกไม่สำเร็จ: กรุณาตรวจสอบว่าพี่ได้ Deploy GAS เป็น 'Anyone' หรือยัง"))
-      .finally(() => document.getElementById('loading').classList.add('hidden'));
+      .catch(err => {
+        document.getElementById('loading').style.display = 'none';
+        alert("เกิดข้อผิดพลาดในการบันทึก");
+      });
     });
 
     window.onload = initLiff;
